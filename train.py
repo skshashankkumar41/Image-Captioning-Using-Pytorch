@@ -16,9 +16,9 @@ def train():
         ]
     )
 
-    trainLoader, dataset = get_loader(
+    trainLoader, valLoader, testLoader, trainDataset = get_loader(
         imagePath = "C:/Users/SKS/Desktop/AAIC/Image_Captioning/Flicker8k_Dataset/", 
-        captionPath = 'C:/Users/SKS/Desktop/AAIC/Image_Captioning/image_train_dataset.tsv',
+        root_path = 'C:/Users/SKS/Desktop/AAIC/Image_Captioning/image_train_dataset.tsv',
         transform = transform 
     )
 
@@ -29,14 +29,14 @@ def train():
 
     embedSize = 256
     hiddenSize = 256
-    vocabSize = len(dataset.vocab)
+    vocabSize = len(trainDataset.vocab)
     numLayers = 1
     learning_rate = 3e-4
     num_epochs = 100
     step = 0
 
     model = CNNtoRNN(embedSize, hiddenSize, vocabSize, numLayers).to(device)
-    criterion = nn.CrossEntropyLoss(ignore_index= dataset.vocab.stoi['<PAD>'])
+    criterion = nn.CrossEntropyLoss(ignore_index= trainDataset.vocab.stoi['<PAD>'])
     optimizer = optim.Adam(model.parameters(), lr = learning_rate)
 
     if load_model:

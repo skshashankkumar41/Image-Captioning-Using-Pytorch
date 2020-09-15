@@ -9,7 +9,7 @@ from PIL import Image
 def inference(imagePath):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    with open('G:/AIP/Image-Captioning/vocab/itos' +'.pkl', 'rb') as f:
+    with open('G:/AIP/Image-Captioning-Using-Pytorch/output/cap_itos' +'.pkl', 'rb') as f:
         itos = pickle.load(f)
         
     embedSize = 256
@@ -18,7 +18,7 @@ def inference(imagePath):
     numLayers = 1
 
     model = CNNtoRNN(embedSize = embedSize, hiddenSize = hiddenSize, vocabSize = vocabSize, numLayers =  numLayers, inference= True).to(device)
-    checkpoint = torch.jit.load("G:/AIP/Image-Captioning/my_checkpoint.pth.tar")
+    checkpoint = torch.jit.load("G:/AIP/Image-Captioning-Using-Pytorch/output/my_checkpoint.pth.tar")
     model.load_state_dict(checkpoint["state_dict"])
     
     transform = transforms.Compose(
@@ -34,7 +34,7 @@ def inference(imagePath):
     output = model.caption_image(image.to(device), itos)
 
     print(output)
-    return 
+    return output
 
 
 inference("test.jpg")  
