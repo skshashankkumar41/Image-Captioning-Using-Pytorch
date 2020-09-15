@@ -53,20 +53,21 @@ def get_loader(imagePath, root_path, transform, batch_size = 16,shuffle = True, 
     return trainLoader, valLoader, testLoader, trainDataset
 
 
-transforms = transforms.Compose(
-    [
-        transforms.Resize((224,224)),
-        transforms.ToTensor(),
-    ]
-)
-trainLoader, valLoader, testLoader, trainDataset = get_loader(
-    imagePath = "C:/Users/SKS/Desktop/AAIC/Image_Captioning/Flicker8k_Dataset/", 
-    root_path = 'input/',
-    transform = transforms 
-    )
-print("DONE")
-for idx, (imgs, captions) in enumerate(trainLoader):
-    print(imgs.shape)
-    print(captions.shape)
-    if idx == 1:
-        break
+# transforms = transforms.Compose(
+#     [
+#         transforms.Resize((224,224)),
+#         transforms.ToTensor(),
+#     ]
+# )
+# trainLoader, valLoader, testLoader, trainDataset = get_loader(
+#     imagePath = "C:/Users/SKS/Desktop/AAIC/Image_Captioning/Flicker8k_Dataset/", 
+#     root_path = 'input/',
+#     transform = transforms 
+#     )
+
+# for idx, (imgs, captions) in enumerate(trainLoader):
+#     print("IDX",idx)
+#     print(imgs.shape)
+#     print(captions.shape)
+#     if idx == 1:
+#         break
