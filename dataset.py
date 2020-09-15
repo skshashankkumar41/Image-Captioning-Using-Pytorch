@@ -46,19 +46,18 @@ class Vocabulary:
             self.stoi[token] if token in self.stoi else self.stoi['<UNK>'] for token in tokenizedText
         ]
 
-    def storeVocab(self):
-        print("INSIDE STOREING")
-        with open('G:/AIP/Image-Captioning/vocab/itos' + '.pkl', 'wb') as f:
+    def storeVocab(self,name):
+        print("Saving Vocab Dict...")
+        with open('G:/AIP/Image-Captioning-Using-Pytorch/output/' + name+ '_itos.pkl', 'wb') as f:
             pickle.dump(self.itos, f, pickle.HIGHEST_PROTOCOL)
 
-        with open('G:/AIP/Image-Captioning/vocab/stoi' + '.pkl', 'wb') as f:
+        with open('G:/AIP/Image-Captioning-Using-Pytorch/output/' + name + '_stoi.pkl', 'wb') as f:
             pickle.dump(self.stoi, f, pickle.HIGHEST_PROTOCOL)
 
-
 class FlickerDataset(Dataset):
     def __init__(self, imagePath, captionFile, transform = None, freqThresold = 5):
         self.imagePath = imagePath
-        self.df = pd.read_csv(captionFile, sep = '\t')
+        self.df = pd.read_csv(captionFile)
         #print(self.df.columns)
         self.transform = transform 
 
@@ -101,52 +100,9 @@ class MyCollate:
 
         return imgs,targets 
 
-class FlickerDataset(Dataset):
-    def __init__(self, imagePath, captionFile, transform = None, freqThresold = 5):
-        self.imagePath = imagePath
-        self.df = pd.read_csv(captionFile, sep = '\t')
-        #print(self.df.columns)
-        self.transform = transform 
-
-        self.imgs = self.df['image']
-        self.captions = self.df['caption']
-
-        self.vocab = Vocabulary(freqThresold)
-        self.vocab.build_vocabulary(self.captions.tolist())
-
-    def __len__(self):
-        return self.df.shape[0]
-
-    def __getitem__(self, index):
-        caption = self.captions[index]
-        img_id = self.imgs[index]
-        img = Image.open(self.imagePath + img_id).convert('RGB')
-        
-        if self.transform is not None:
-            img = self.transform(img)
-
-        encoded_caption = [self.vocab.stoi["<SOS>"]] 
-        encoded_caption += self.vocab.encode(caption)
-        encoded_caption.append(self.vocab.stoi["<EOS>"])
-
-        #print("CAPTION::",caption)
-        #print("ENCODED::",encoded_caption)
-
-        return img, torch.tensor(encoded_caption)
 
 
-class MyCollate:
-    def __init__(self,padIdx):
-        self.padIdx = padIdx
-
-    def __call__(self,batch):
-        imgs = [item[0].unsqueeze(0) for item in batch]       
-        imgs = torch.cat(imgs,dim = 0)
-        targets = [item[1] for item in batch]
-        targets = pad_sequence(targets, batch_first=False, padding_value= self.padIdx)
-
-        return imgs,targets 
-
+trainDataset = FlickerDataset("C:/Users/SKS/Desktop/AAIC/Image_Captioning/Flicker8k_Dataset/",'input/' + 'train_df.csv')
 
 # def get_loader(imagePath, captionPath, transform, batch_size = 32,shuffle = True):
 #     dataset = FlickerDataset(imagePath,captionPath, transform = transform)

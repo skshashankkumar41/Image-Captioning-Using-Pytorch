@@ -2,8 +2,7 @@ from dataset import FlickerDataset
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
-
-
+import torchvision.transforms as transforms
 
 class MyCollate:
     def __init__(self,padIdx):
@@ -18,34 +17,56 @@ class MyCollate:
         return imgs,targets 
 
 
-def get_loader(imagePath, captionPath, transform, batch_size = 16,shuffle = True):
-    dataset = FlickerDataset(imagePath,captionPath, transform = transform)
-    dataset.vocab.storeVocab()
-    padIdx = dataset.vocab.stoi['<PAD>']
-    loader = DataLoader(
-        dataset = dataset,
+def get_loader(imagePath, root_path, transform, batch_size = 16,shuffle = True, num_workers = 2,pin_memory = True):
+    trainDataset = FlickerDataset(imagePath, root_path + 'train_df.csv',transform=transform)
+    valDataset = FlickerDataset(imagePath, root_path + 'validate_df.csv',transform=transform)
+    testDataset = FlickerDataset(imagePath, root_path + 'test_df.csv', transform=transform)
+    
+    trainDataset.vocab.storeVocab('cap')
+    
+    padIdx = trainDataset.vocab.stoi['<PAD>']
+    
+    trainLoader = DataLoader(
+        dataset =trainDataset,
         batch_size= batch_size,
         shuffle = shuffle, 
+        pin_memory = pin_memory,
         collate_fn = MyCollate(padIdx = padIdx )
     )
 
-    return loader,dataset
+    valLoader = DataLoader(
+        dataset = valDataset,
+        batch_size= batch_size,
+        shuffle = shuffle, 
+        pin_memory = pin_memory,
+        collate_fn = MyCollate(padIdx = padIdx )
+    )
+
+    testLoader = DataLoader(
+        dataset = testDataset,
+        batch_size= batch_size,
+        shuffle = shuffle, 
+        pin_memory = pin_memory,
+        collate_fn = MyCollate(padIdx = padIdx )
+    )
+
+    return trainLoader, valLoader, testLoader, trainDataset
 
 
-# transforms = transforms.Compose(
-#     [
-#         transforms.Resize((224,224)),
-#         transforms.ToTensor(),
-#     ]
-# )
-# dataloader = get_loader(
-#     imagePath = "C:/Users/SKS/Desktop/AAIC/Image_Captioning/Flicker8k_Dataset/", 
-#     captionPath = 'C:/Users/SKS/Desktop/AAIC/Image_Captioning/image_train_dataset.tsv',
-#     transform = transforms 
-#     )
-
-# for idx, (imgs, captions) in enumerate(dataloader):
-#     print(imgs.shape)
-#     print(captions.shape)
-#     if idx == 1:
-#         break
+transforms = transforms.Compose(
+    [
+        transforms.Resize((224,224)),
+        transforms.ToTensor(),
+    ]
+)
+trainLoader, valLoader, testLoader, trainDataset = get_loader(
+    imagePath = "C:/Users/SKS/Desktop/AAIC/Image_Captioning/Flicker8k_Dataset/", 
+    root_path = 'input/',
+    transform = transforms 
+    )
+print("DONE")
+for idx, (imgs, captions) in enumerate(trainLoader):
+    print(imgs.shape)
+    print(captions.shape)
+    if idx == 1:
+        break
