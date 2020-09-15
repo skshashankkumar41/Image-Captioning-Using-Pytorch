@@ -3,26 +3,16 @@ import torch.nn as nn
 import torchvision.models as models 
 
 class EncoderCNN(nn.Module):
-    def __init__(self, embedSize, trainCNN = False,inference = False):
+    def __init__(self, embedSize, trainCNN = False):
         super(EncoderCNN,self).__init__()
         self.trainCNN = trainCNN 
-        if not inference:
-            self.inception = models.inception_v3(pretrained=True,aux_logits = False)
-        else:
-            self.inception = models.inception_v3(pretrained=False,aux_logits = False)
+        self.inception = models.inception_v3(pretrained=True,aux_logits = False)
         self.inception.fc = nn.Linear(self.inception.fc.in_features,embedSize)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
 
     def forward(self,images):
         features = self.inception(images)
-
-        for name, params in self.inception.named_parameters():
-            if "fc.weight" in name or "fc.bias" in name:
-                params.requires_grad = True 
-            else:
-                params.requires_grad = self.trainCNN
-
         return self.dropout(self.relu(features))
 
 class DecoderRNN(nn.Module):
@@ -41,9 +31,9 @@ class DecoderRNN(nn.Module):
         return outputs 
 
 class CNNtoRNN(nn.Module):
-    def __init__(self,embedSize, hiddenSize, vocabSize, numLayers,inference = False):
+    def __init__(self,embedSize, hiddenSize, vocabSize, numLayers):
         super(CNNtoRNN,self).__init__()
-        self.encoderCNN = EncoderCNN(embedSize, inference)
+        self.encoderCNN = EncoderCNN(embedSize)
         self.decoderRNN = DecoderRNN(embedSize, hiddenSize, vocabSize, numLayers)
 
     def forward(self, images, captions):
@@ -52,23 +42,22 @@ class CNNtoRNN(nn.Module):
 
         return outputs 
 
-    def caption_image(self,image,itos, max_length = 50):
-        final_caption = []
+    def caption_image(self, image, vocabulary, max_length=50):
+        result_caption = []
 
         with torch.no_grad():
             x = self.encoderCNN(image).unsqueeze(0)
-            states = None 
+            states = None
 
             for _ in range(max_length):
-                hiddens, states = self.decoderRNN.lstm(x,states)
+                hiddens, states = self.decoderRNN.lstm(x, states)
                 output = self.decoderRNN.linear(hiddens.squeeze(0))
                 predicted = output.argmax(1)
-
-                final_caption.append(predicted.item())
-
+                result_caption.append(predicted.item())
                 x = self.decoderRNN.embed(predicted).unsqueeze(0)
 
-                if itos[predicted.item()] == '<EOS>':
+                if vocabulary.itos[predicted.item()] == "<EOS>":
                     break
+        print("MODELCAP::",result_caption)
 
-        return [itos[idx] for idx in final_caption]
+        return [vocabulary.itos[idx] for idx in result_caption]

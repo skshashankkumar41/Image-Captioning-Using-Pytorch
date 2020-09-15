@@ -5,7 +5,6 @@ from model import EncoderCNN,DecoderRNN,CNNtoRNN
 import pickle
 from PIL import Image
 
-
 def inference(imagePath):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -17,7 +16,7 @@ def inference(imagePath):
     vocabSize = len(itos)
     numLayers = 1
 
-    model = CNNtoRNN(embedSize = embedSize, hiddenSize = hiddenSize, vocabSize = vocabSize, numLayers =  numLayers, inference= True).to(device)
+    model = CNNtoRNN(embedSize = embedSize, hiddenSize = hiddenSize, vocabSize = vocabSize, numLayers =  numLayers).to(device)
     checkpoint = torch.jit.load("G:/AIP/Image-Captioning-Using-Pytorch/output/my_checkpoint.pth.tar")
     model.load_state_dict(checkpoint["state_dict"])
     
